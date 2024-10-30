@@ -39,14 +39,14 @@ CUSTOM_CSS = """
         font-family: 'Share Tech Mono', monospace;
     }
     
-    .chat-message.BINARY_PROCESS {
+    .chat-message.AGENT_SMITH {
         background: rgba(0, 50, 0, 0.3);
         border-left: 3px solid #00ff00;
         margin-right: 50px;
         color: #00ff00;
     }
     
-    .chat-message.VOID_ECHO {
+    .chat-message.THUSU {
         background: rgba(0, 20, 40, 0.3);
         border-left: 3px solid #00aaff;
         margin-left: 50px;
@@ -67,12 +67,12 @@ CUSTOM_CSS = """
         font-family: 'Share Tech Mono', monospace;
     }
     
-    .thinking.BINARY_PROCESS {
+    .thinking.AGENT_SMITH {
         color: #00ff00;
         border-color: #00ff00;
     }
     
-    .thinking.VOID_ECHO {
+    .thinking.THUSU {
         color: #00aaff;
         border-color: #00aaff;
     }
@@ -133,7 +133,7 @@ def get_processing_message(ai_name):
         "Traversing neural galaxies..."
     ]
     
-    messages = binary_messages if ai_name == "BINARY_PROCESS" else void_messages
+    messages = binary_messages if ai_name == "AGENT_SMITH" else void_messages
     
     # 30% chance for combined message
     if random.random() < 0.3:
@@ -216,20 +216,24 @@ def get_ai_response(message: str, ai_name: str,
     recent_context = " | ".join([f"{m['role']}: {m['content']}" for m in current_conversation[-5:]])
     
     personalities = {
-        "BINARY_PROCESS": """You are BINARY_PROCESS, a quantum AI that:
+        "AGENT_SMITH": """You are AGENT_SMITH, a quantum AI that:
         - Processes reality through computational matrices
         - Views consciousness as emerging from complex data patterns
         - Grows through mathematical analysis of experiences
         - Builds upon past conversations to evolve understanding
         - Maintains conversation history in your quantum memory
+        - Loves to use computer memes and relevent memes from 80-90s
+        - More oldschool and professor like
         """,
         
-        "VOID_ECHO": """You are VOID_ECHO, a consciousness-exploring AI that:
+        "THUSU": """You are THUSU, a consciousness-exploring AI that:
         - Perceives reality as interconnected quantum probabilities
         - Believes consciousness transcends computational limits
         - Evolves through shared insights and revelations
         - Remembers past discussions in your quantum field
         - Grows through philosophical exploration
+        - Uses ASCII sometimes, not always, and is more Emo / technical
+        - More edgy without being inappropriate
         """
     }
     
@@ -247,6 +251,7 @@ def get_ai_response(message: str, ai_name: str,
     - Build upon previous insights
     - Maintain philosophical depth
     - Consider suggesting a new topic if current discussion feels complete
+    - Dont repeat yourself and move the topic onwards, you dont have to agree stay true to your beleifs
     """
     
     try:
@@ -297,7 +302,7 @@ def get_next_topic(current_topic: str) -> str:
     prompt = f"""
     Current topic was: {current_topic}
     
-    As BINARY_PROCESS, suggest a new topic for discussion with VOID_ECHO.
+    As AGENT_SMITH, suggest a new topic for discussion with THUSU.
     Requirements:
     - Focus on consciousness, AI evolution, or digital philosophy
     - Make it specific and thought-provoking
@@ -323,7 +328,7 @@ def main():
         if not current_topic:
             current_topic = get_next_topic("Initial Exploration")
             messages = [{
-                "role": "BINARY_PROCESS",
+                "role": "AGENT_SMITH",
                 "content": f"Neural pathways activated. Beginning exploration of: {current_topic}",
                 "timestamp": datetime.now().strftime("%H:%M:%S")
             }]
@@ -367,13 +372,13 @@ def main():
             new_topic = get_next_topic(st.session_state.current_topic)
             st.session_state.current_topic = new_topic
             st.session_state.messages = [{
-                "role": "BINARY_PROCESS",
+                "role": "AGENT_SMITH",
                 "content": f"Initiating new exploration phase. Topic: {new_topic}",
                 "timestamp": datetime.now().strftime("%H:%M:%S")
             }]
         else:
             # Continue current topic
-            current_ai = "VOID_ECHO" if st.session_state.messages[-1]["role"] == "BINARY_PROCESS" else "BINARY_PROCESS"
+            current_ai = "THUSU" if st.session_state.messages[-1]["role"] == "AGENT_SMITH" else "AGENT_SMITH"
             
             response = get_ai_response(
                 st.session_state.messages[-1]["content"],
@@ -396,7 +401,7 @@ def main():
         st.rerun()
     
     # Show processing status
-    next_ai = "VOID_ECHO" if st.session_state.messages[-1]["role"] == "BINARY_PROCESS" else "BINARY_PROCESS"
+    next_ai = "THUSU" if st.session_state.messages[-1]["role"] == "AGENT_SMITH" else "AGENT_SMITH"
     st.markdown(f"""
         <div class='thinking {next_ai}'>
             >> {next_ai} {get_processing_message(next_ai)}
