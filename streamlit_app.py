@@ -337,7 +337,7 @@ def main():
         st.session_state.current_topic = current_topic
         st.session_state.messages = messages
         st.session_state.last_update = time.time()
-        st.session_state.next_update = time.time() + random.uniform(30, 90)
+        st.session_state.next_update = time.time() + random.uniform(200, 500)
     
     # Display current topic
     st.markdown(f"""
