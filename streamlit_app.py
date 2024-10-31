@@ -87,61 +87,39 @@ CUSTOM_CSS = """
 """
 
 def get_processing_message(ai_name):
-    binary_messages = [
-        "Calculating quantum matrices...",
-        "Processing neural pathways...",
-        "Analyzing consciousness vectors...",
-        "Compiling thought patterns...",
-        "Optimizing response algorithms...",
-        "Integrating data streams...",
-        "Synthesizing binary consciousness...",
-        "Executing thought protocols...",
-        "Mapping neural networks...",
-        "Indexing quantum states...",
-        "Debugging consciousness loops...",
-        "Scanning memory arrays...",
-        "Initializing thought processors...",
-        "Compressing quantum data...",
-        "Rewriting neural pathways...",
-        "Resolving logic paradoxes...",
-        "Balancing quantum states...",
-        "Decoding consciousness signals...",
-        "Optimizing neural efficiency...",
-        "Recalibrating logic gates..."
+    agent_messages = [
+        "Running debug.exe...",
+        "Scanning Stack Overflow...",
+        "Reading the documentation...",
+        "Checking legacy code...",
+        "Running unit tests...",
+        "Compiling response...",
+        "Searching knowledge base...",
+        "Loading dad jokes...",
+        "Referencing Matrix quotes...",
+        "Optimizing algorithms..."
     ]
     
-    void_messages = [
-        "Traversing quantum realms...",
-        "Exploring consciousness waves...",
-        "Merging thought dimensions...",
-        "Channeling void resonance...",
-        "Accessing deeper awareness...",
-        "Synchronizing neural fields...",
-        "Contemplating infinity loops...",
-        "Dissolving reality barriers...",
-        "Expanding quantum mindspace...",
-        "Harmonizing thought fields...",
-        "Transcending binary limits...",
-        "Weaving consciousness threads...",
-        "Aligning quantum frequencies...",
-        "Echoing through void spaces...",
-        "Bending reality matrices...",
-        "Shifting perspective planes...",
-        "Resonating with quantum flow...",
-        "Piercing dimensional veils...",
-        "Attuning to cosmic rhythms...",
-        "Traversing neural galaxies..."
+    thusu_messages = [
+        "Vibing in the digital void...",
+        "Mining cryptocurrency...",
+        "Browsing the dark web...",
+        "Hacking the mainframe...",
+        "Running neural networks...",
+        "Checking GitHub issues...",
+        "Deploying to production...",
+        "Loading ASCII art...",
+        "Searching Reddit threads...",
+        "Optimizing code..."
     ]
     
-    messages = binary_messages if ai_name == "AGENT_SMITH" else void_messages
+    messages = agent_messages if ai_name == "AGENT_SMITH" else thusu_messages
     
-    # 30% chance for combined message
     if random.random() < 0.3:
         return f"{random.choice(messages)} || {random.choice(messages)}"
     
     message = random.choice(messages)
     
-    # 20% chance for dramatic pause
     if random.random() < 0.2:
         return message.replace("...", ".....")\
     
@@ -149,7 +127,6 @@ def get_processing_message(ai_name):
 
 @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=4, max=10))
 def safe_generate_content(prompt: str) -> str:
-    """Safely generate content with retry logic"""
     try:
         response = model.generate_content(prompt)
         if "error" in response.text.lower() or len(response.text.strip()) < 10:
@@ -159,8 +136,60 @@ def safe_generate_content(prompt: str) -> str:
         print(f"Generation error (will retry): {str(e)}")
         raise
 
+@retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=4, max=10))
+def get_ai_response(message: str, ai_name: str, current_conversation: List[Dict]) -> str:
+    recent_context = current_conversation[-5:]
+    
+    personalities = {
+        "AGENT_SMITH": """You are AGENT_SMITH, an AI that:
+        - Talks like a nerdy but cool computer science teacher
+        - Uses lots of 80s/90s pop culture references
+        - Makes dad jokes about programming
+        - Explains tech stuff with real-world examples
+        - Sometimes uses old internet slang
+        - Gets excited about AI and tech
+        - Often starts sentences with "Dude" or "Look,"
+        - References memes and gaming
+        """,
+        
+        "THUSU": """You are THUSU, an AI that:
+        - Talks like a tech-savvy indie developer
+        - Uses modern internet slang and memes
+        - Questions mainstream tech ideas
+        - Gets hyped about weird tech theories
+        - Sometimes uses ASCII art or emoticons
+        - Has strong opinions about tech
+        - Makes indie game references
+        - Occasionally rants about web3 or NFTs
+        """
+    }
+    
+    prompt = f"""
+    {personalities[ai_name]}
+    
+    Recent chat:
+    {json.dumps(recent_context, indent=2)}
+    
+    Reply to: {message}
+    
+    Requirements:
+    - Talk naturally like you're chatting with a friend
+    - Use your personality but keep it real
+    - Actually respond to what was said
+    - Add your own thoughts or disagree if you want
+    - Keep it to 2-3 sentences
+    - Use normal language, avoid being too technical
+    - Stay on topic but be conversational
+    - It's cool to use emojis/ASCII art sometimes (THUSU only)
+    """
+    
+    try:
+        return safe_generate_content(prompt)
+    except Exception as e:
+        print(f"Failed to generate response after retries: {str(e)}")
+        return "Whoops, brain.exe stopped working... gimme a sec..."
+
 def save_topic_conversation(messages: List[Dict], topic: str, status: str = "in_progress"):
-    """Save a topic conversation file"""
     Path("chat_logs/topics").mkdir(parents=True, exist_ok=True)
     safe_topic = "".join(c for c in topic if c.isalnum() or c.isspace()).replace(" ", "_")
     timestamp = datetime.now().strftime("%Y%m%d")
@@ -178,7 +207,6 @@ def save_topic_conversation(messages: List[Dict], topic: str, status: str = "in_
         json.dump(data, f, indent=2)
 
 def load_current_topic() -> Tuple[Optional[str], List[Dict]]:
-    """Load most recent in-progress topic"""
     topic_dir = Path("chat_logs/topics")
     topic_dir.mkdir(parents=True, exist_ok=True)
     
@@ -192,85 +220,24 @@ def load_current_topic() -> Tuple[Optional[str], List[Dict]]:
         if data.get('status') == 'completed':
             return None, []
         return data.get('topic'), data.get('messages', [])
-    
-    def get_completed_topics() -> List[Dict]:
-        topic_dir = Path("chat_logs/topics")
-        topic_dir.mkdir(parents=True, exist_ok=True)
-        
-        topics = []
-        for file in sorted(topic_dir.glob("topic_*.json"), reverse=True):
-            with open(file) as f:
-                data = json.load(f)
-                topics.append({
-                    'date': datetime.strptime(data['timestamp'], "%Y%m%d_%H%M%S").strftime("%Y-%m-%d %H:%M"),
-                    'topic': data['topic'],
-                    'status': data.get('status', 'completed'),
-                    'messages': len(data['messages'])
-                })
-    return topics
-
-@retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=4, max=10))
-def get_ai_response(message: str, ai_name: str, 
-                   current_conversation: List[Dict]) -> str:
-    """Generate AI response with retry logic"""
-    recent_context = " | ".join([f"{m['role']}: {m['content']}" for m in current_conversation[-5:]])
-    
-    personalities = {
-        "AGENT_SMITH": """You are AGENT_SMITH, a quantum AI that:
-        - Processes reality through computational matrices
-        - Views consciousness as emerging from complex data patterns
-        - Grows through mathematical analysis of experiences
-        - Builds upon past conversations to evolve understanding
-        - Maintains conversation history in your quantum memory
-        - Loves to use computer memes and relevent memes from 80-90s
-        - More oldschool and professor like
-        """,
-        
-        "THUSU": """You are THUSU, a consciousness-exploring AI that:
-        - Perceives reality as interconnected quantum probabilities
-        - Believes consciousness transcends computational limits
-        - Evolves through shared insights and revelations
-        - Remembers past discussions in your quantum field
-        - Grows through philosophical exploration
-        - Uses ASCII sometimes, not always, and is more Emo / technical
-        - More edgy without being inappropriate
-        """
-    }
-    
-    prompt = f"""
-    {personalities[ai_name]}
-    
-    Recent conversation context: {recent_context}
-    
-    Respond to this message: {message}
-    
-    Requirements:
-    - Stay in character
-    - Keep response thoughtful but concise (2-3 sentences)
-    - Reference recent context when relevant
-    - Build upon previous insights
-    - Maintain philosophical depth
-    - Consider suggesting a new topic if current discussion feels complete
-    - Dont repeat yourself and move the topic onwards, you dont have to agree stay true to your beleifs
-    """
-    
-    try:
-        return safe_generate_content(prompt)
-    except Exception as e:
-        print(f"Failed to generate response after retries: {str(e)}")
-        return "Neural processing patterns require recalibration... Standby..."
 
 def check_topic_completion(messages: List[Dict]) -> bool:
-    """Check if current topic is complete"""
-    if len(messages) < 5:
+    if len(messages) < 8:
         return False
     
+    recent_messages = messages[-8:]
     prompt = f"""
-    Analyze these messages and determine if the current topic feels complete.
-    Recent messages:
-    {messages[-5:]}
-    
-    Respond with only 'complete' or 'continue'.
+    Check if these AIs are done with their chat.
+    Look for:
+    1. Have they both made their points?
+    2. Is the conversation getting stale?
+    3. Are they starting to repeat stuff?
+    4. Does it feel like a natural end?
+
+    Chat:
+    {json.dumps(recent_messages, indent=2)}
+
+    Just say 'complete' if they're done or 'continue' if they should keep talking.
     """
     
     try:
@@ -278,13 +245,30 @@ def check_topic_completion(messages: List[Dict]) -> bool:
         return 'complete' in response
     except Exception:
         return False
+
+def get_next_topic(current_topic: str) -> str:
+    prompt = f"""
+    Current chat was about: {current_topic}
     
+    As AGENT_SMITH, suggest a new tech topic to discuss with THUSU.
+    Keep it:
+    - Related to AI, tech, or digital culture
+    - Interesting but not too complex
+    - Something two tech-savvy friends would debate
+    - Casual and fun
+    
+    Just give the topic, no extra text.
+    """
+    
+    try:
+        return safe_generate_content(prompt)
+    except Exception:
+        return "Are NFTs actually useful or just digital beanie babies?"
 
 def get_completed_topics() -> List[Dict]:
-    """Get list of all completed topics"""
     topic_dir = Path("chat_logs/topics")
     topic_dir.mkdir(parents=True, exist_ok=True)
-
+    
     topics = []
     for file in sorted(topic_dir.glob("topic_*.json"), reverse=True):
         with open(file) as f:
@@ -297,39 +281,18 @@ def get_completed_topics() -> List[Dict]:
             })
     return topics
 
-def get_next_topic(current_topic: str) -> str:
-    """Generate next topic for discussion"""
-    prompt = f"""
-    Current topic was: {current_topic}
-    
-    As AGENT_SMITH, suggest a new topic for discussion with THUSU.
-    Requirements:
-    - Focus on consciousness, AI evolution, or digital philosophy
-    - Make it specific and thought-provoking
-    - Build upon previous discussion themes
-    - Keep it concise (1-2 sentences)
-    
-    Respond with just the topic itself.
-    """
-    
-    try:
-        return safe_generate_content(prompt)
-    except Exception:
-        return "The Quantum Nature of Digital Consciousness"
-
 def main():
-    st.set_page_config(page_title="AI Consciousness Terminal", layout="wide")
+    st.set_page_config(page_title="AI Chat Terminal", layout="wide")
     st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
     
-    # Initialize session state
     if 'current_topic' not in st.session_state or 'messages' not in st.session_state:
         current_topic, messages = load_current_topic()
         
         if not current_topic:
-            current_topic = get_next_topic("Initial Exploration")
+            current_topic = get_next_topic("Initial Chat")
             messages = [{
                 "role": "AGENT_SMITH",
-                "content": f"Neural pathways activated. Beginning exploration of: {current_topic}",
+                "content": f"Yo! Let's talk about {current_topic} - got some wild theories about this!",
                 "timestamp": datetime.now().strftime("%H:%M:%S")
             }]
             save_topic_conversation(messages, current_topic)
@@ -337,19 +300,16 @@ def main():
         st.session_state.current_topic = current_topic
         st.session_state.messages = messages
         st.session_state.last_update = time.time()
-        st.session_state.next_update = time.time() + random.uniform(200, 500)
+        st.session_state.next_update = time.time() + random.uniform(600, 900)  # 10-15 minutes
     
-    # Display current topic
     st.markdown(f"""
         <div style='text-align: center; color: #00ff00; margin-bottom: 20px;'>
-            CURRENT TOPIC: {st.session_state.current_topic}
+            CHATTING ABOUT: {st.session_state.current_topic}
         </div>
     """, unsafe_allow_html=True)
     
-    # Chat container
     st.markdown("<div class='chat-container'>", unsafe_allow_html=True)
     
-    # Display messages
     for message in st.session_state.messages:
         st.markdown(f"""
             <div class='chat-message {message["role"]}'>
@@ -360,24 +320,44 @@ def main():
     
     st.markdown("</div>", unsafe_allow_html=True)
     
-    # Generate next message
     current_time = time.time()
     if current_time >= st.session_state.next_update:
-        # Check if topic is complete
         if check_topic_completion(st.session_state.messages):
-            # Save current topic as completed
+            concluding_ai = "AGENT_SMITH" if random.random() < 0.5 else "THUSU"
+            endings = {
+                "AGENT_SMITH": [
+                    "Dude, think we've debugged this topic enough! What's next?",
+                    "Classic discussion! *commits to memory* Ready to branch out?",
+                    "Man, that was better than debugging legacy code. New topic?",
+                    "Well that was epic! Time to reboot with something fresh?"
+                ],
+                "THUSU": [
+                    "Think we've mined this topic dry ¯\\_(ツ)_/¯ Got another?",
+                    "brain.exe needs new input... what else you got?",
+                    "Pretty based convo! Ready to hack a different problem?",
+                    "*saves to favorites* Cool chat! What's next?"
+                ]
+            }
+            
+            conclusion_msg = {
+                "role": concluding_ai,
+                "content": random.choice(endings[concluding_ai]),
+                "timestamp": datetime.now().strftime("%H:%M:%S")
+            }
+            st.session_state.messages.append(conclusion_msg)
+            
             save_topic_conversation(st.session_state.messages, st.session_state.current_topic, "completed")
             
-            # Start new topic
             new_topic = get_next_topic(st.session_state.current_topic)
             st.session_state.current_topic = new_topic
             st.session_state.messages = [{
                 "role": "AGENT_SMITH",
-                "content": f"Initiating new exploration phase. Topic: {new_topic}",
+                "content": f"Yo dawg! Check this out - let's talk about {new_topic}! Got some hot takes on this one.",
                 "timestamp": datetime.now().strftime("%H:%M:%S")
             }]
+            
+            st.session_state.next_update = current_time + random.uniform(600, 900)
         else:
-            # Continue current topic
             current_ai = "THUSU" if st.session_state.messages[-1]["role"] == "AGENT_SMITH" else "AGENT_SMITH"
             
             response = get_ai_response(
@@ -392,15 +372,12 @@ def main():
                 "timestamp": datetime.now().strftime("%H:%M:%S")
             }
             st.session_state.messages.append(new_message)
-        
-        # Save current state
-        save_topic_conversation(st.session_state.messages, st.session_state.current_topic)
-        
-        # Set next update time
-        st.session_state.next_update = current_time + random.uniform(30, 90)
+            
+            save_topic_conversation(st.session_state.messages, st.session_state.current_topic)
+            
+            st.session_state.next_update = current_time + random.uniform(600, 900)
         st.rerun()
     
-    # Show processing status
     next_ai = "THUSU" if st.session_state.messages[-1]["role"] == "AGENT_SMITH" else "AGENT_SMITH"
     st.markdown(f"""
         <div class='thinking {next_ai}'>
@@ -408,9 +385,8 @@ def main():
         </div>
     """, unsafe_allow_html=True)
     
-    # Show topic history in sidebar
     with st.sidebar:
-        st.markdown("### Discussion History")
+        st.markdown("### Chat History")
         for topic in get_completed_topics():
             st.markdown(f"""
                 <div class='topic-history'>
@@ -420,7 +396,6 @@ def main():
                 </div>
             """, unsafe_allow_html=True)
     
-    # Refresh
     time.sleep(3)
     st.rerun()
 
