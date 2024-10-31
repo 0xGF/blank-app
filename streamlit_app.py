@@ -190,10 +190,10 @@ def get_ai_response(message: str, ai_name: str, current_conversation: List[Dict]
         return "Whoops, brain.exe stopped working... gimme a sec..."
 
 def save_topic_conversation(messages: List[Dict], topic: str, status: str = "in_progress"):
-    Path("chat_logs/topics").mkdir(parents=True, exist_ok=True)
+    Path("chat_logs/convos").mkdir(parents=True, exist_ok=True)
     safe_topic = "".join(c for c in topic if c.isalnum() or c.isspace()).replace(" ", "_")
     timestamp = datetime.now().strftime("%Y%m%d")
-    filename = f"chat_logs/topics/topic_{timestamp}_{safe_topic[:30]}.json"
+    filename = f"chat_logs/convos/topic_{timestamp}_{safe_topic[:30]}.json"
     
     data = {
         'timestamp': datetime.now().strftime("%Y%m%d_%H%M%S"),
@@ -207,7 +207,7 @@ def save_topic_conversation(messages: List[Dict], topic: str, status: str = "in_
         json.dump(data, f, indent=2)
 
 def load_current_topic() -> Tuple[Optional[str], List[Dict]]:
-    topic_dir = Path("chat_logs/topics")
+    topic_dir = Path("chat_logs/convos")
     topic_dir.mkdir(parents=True, exist_ok=True)
     
     topic_files = list(topic_dir.glob("topic_*.json"))
@@ -266,7 +266,7 @@ def get_next_topic(current_topic: str) -> str:
         return "Are NFTs actually useful or just digital beanie babies?"
 
 def get_completed_topics() -> List[Dict]:
-    topic_dir = Path("chat_logs/topics")
+    topic_dir = Path("chat_logs/convos")
     topic_dir.mkdir(parents=True, exist_ok=True)
     
     topics = []
